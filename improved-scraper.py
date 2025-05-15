@@ -5,7 +5,7 @@ from yt_dlp import YoutubeDL
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# Use a session with retry capabilities
+#session
 def create_session():
     session = requests.Session()
     retry = Retry(total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
@@ -14,7 +14,7 @@ def create_session():
     session.mount('https://', adapter)
     return session
 
-# Common headers that mimic a browser
+# headers
 def get_headers():
     return {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -25,11 +25,9 @@ def get_headers():
         'Connection': 'keep-alive'
     }
 
-# Get specific Brightcove headers - these may need to be extracted from the website
+# Get specific Brightcove headers from the website
 def get_brightcove_headers():
     headers = get_headers()
-    # You may need to extract these values from the watch.entertheden.com website
-    # Often found in network requests when playing a video
     headers.update({
         'BCOV-POLICY': 'BCpkADawqM1cdm1RqtIYg6GJ1ZS5-Yj5jSmL5hGwlqkIWpi8IyjlUKq9x-RP6C3hM0GQmh3hfmNRwT-J_Sh4xFznvwxIao0vb2m0257I-q7nPH3Nb0H-wgaEadZGlxw6',  # Example policy key
         'scheme' : 'https',
@@ -95,12 +93,11 @@ def asset_id_to_video_id(asset_id, session):
 def video_id_to_stream_url(video_id, session):
     url = f"https://edge.api.brightcove.com/playback/v1/accounts/6415533679001/videos/{video_id}"
     try:
-        # This endpoint likely needs the Brightcove authorization headers
         resp = session.get(url, headers=get_brightcove_headers())
         resp.raise_for_status()
         data = resp.json()
         sources = data.get('sources', [])
-        # Find first HLS source (application/x-mpegURL)
+        # Finding first HLS source (application/x-mpegURL)
         for s in sources:
             if s.get('type') == 'application/x-mpegURL' and 'src' in s:
                 return s['src']
@@ -160,7 +157,6 @@ if __name__ == "__main__":
         if download_with_ytdlp(hls_url, f"entertheden_{asset_id}"):
             successful_downloads += 1
         
-        # Add delay between downloads to prevent rate limiting
         time.sleep(random.uniform(3, 7))
     
     print(f"Download completed. Successfully downloaded {successful_downloads} out of {len(asset_ids)} videos.")
